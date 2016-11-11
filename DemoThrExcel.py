@@ -75,7 +75,7 @@ class DemoThrExcel(TestCase):
         columns = sheet.getColumnCellsValueByColumnIndex(i+1)
         print (columns)
         #excel.multiThreadReleaseThreadData() #释放对象,不使用锁时报错？
-        #self._lockSheet(self.locker1,excel.multiThreadReleaseThreadData)#释放对象,要使用锁来操作，否则会报错
+        self._lockSheet(self.locker1,excel.multiThreadReleaseThreadData)#释放对象,要使用锁来操作，否则会报错
 
     def _lockSheet(self,locker,func,*args):
         #locker = self.locker1

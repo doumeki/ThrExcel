@@ -231,13 +231,14 @@ class ThrSheet():
     def getOneCellValueByRowNameColumnName(self, cell):
         return self.getOneCellByRowNameColumnName(cell).Value
 
-    # 根据一个Cell对像取得Value值
-    def getOneCellValueByCellObject(self, cell):
-        return cell.Value
 
-    # 根据行数，列数取得一个Cell对象
-    def getOneCellByRowColumnIndex(self, row, column):
-        return self._sheet.Cells(row, column)
+    # # 根据一个Cell对像取得Value值
+    # def getOneCellValueByCellObject(self, cell):
+    #     return cell.Value
+    #
+    # # 根据行数，列数取得一个Cell对象
+    # def getOneCellByRowColumnIndex(self, row, column):
+    #     return self._sheet.Cells(row, column)
 
     # 获取行对象
     # @index_row: 行数　整数型
