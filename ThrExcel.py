@@ -221,24 +221,23 @@ class ThrSheet():
 
     # 获取一个Cell
     # @cell 的格式： A1, B3
-    def getOneCellByRowNameColumnName(self, cell):
+    def getOneCellByRowNameColumnName(self, cell,getValue = False):
         "Get value of one cell"
         c = self._cellsplit(cell)
+        if getValue:
+            return self._sheet.Cells(c[1], c[0]).Value
         return self._sheet.Cells(c[1], c[0])
 
-    # 获取一个Cell的值
-    # @cell 的格式： A1, B3
-    def getOneCellValueByRowNameColumnName(self, cell):
-        return self.getOneCellByRowNameColumnName(cell).Value
 
+    # 根据一个Cell对像取得Value值
+    def getOneCellValueByCellObject(self, cell):
+        return cell.Value
 
-    # # 根据一个Cell对像取得Value值
-    # def getOneCellValueByCellObject(self, cell):
-    #     return cell.Value
-    #
-    # # 根据行数，列数取得一个Cell对象
-    # def getOneCellByRowColumnIndex(self, row, column):
-    #     return self._sheet.Cells(row, column)
+    # 根据行数，列数取得一个Cell对象
+    def getOneCellByRowColumnIndex(self, row, column,getValue = False):
+        if getValue:
+            return self._sheet.Cells(row,column).Value
+        return self._sheet.Cells(row, column)
 
     # 获取行对象
     # @index_row: 行数　整数型
@@ -248,11 +247,11 @@ class ThrSheet():
     # 获取一行已使用的Cell，已使用的意思是该cell有值或该cell的背景色。要求连续
     # @index_row：目标行，
     # @start_column: 默认从列１开始计算
-    def getUsedRowCellsByRowIndex(self, index_row, start_column=1):
+    def getUsedRowCellsByRowIndex(self, index_row, start_column=1,getValue = False):
         indexColum = self._usedRange(index_row)
         if indexColum == 0:
             return None
-        return self.getRange(index_row, start_column, index_row, indexColum)
+        return self.getRange(index_row, start_column, index_row, indexColum,getValue=getValue)
 
     def _usedRange(self, index_row):
         allCells = self.getRowCellsByRowIndex(index_row)
@@ -278,8 +277,15 @@ class ThrSheet():
             return True
 
     # 获取一行的所有Cell
-    def getRowCellsByRowIndex(self, index_row):
-        return self._sheet.Rows(index_row).Cells
+    def getRowCellsByRowIndex(self, index_row,getValue = False):
+        cells =  self._sheet.Rows(index_row).Cells
+        ret = []
+        if getValue:
+            for c in cells:
+                ret.append(c.Value)
+            return ret
+        return cells
+
 
     # 获取一个wk的usedRange
     def getUsedRangeInWorkSheet(self, sheet=None):
@@ -352,8 +358,14 @@ class ThrSheet():
 
     # 根据*行*列到*行*列得到一个Range
     # Ｎ行　Ｎ列　到　Ｍ行，Ｍ列
-    def getRange(self, row1, col1, row2, col2):
-        return self._sheet.Range(self._sheet.Cells(row1, col1), self._sheet.Cells(row2, col2))
+    def getRange(self, row1, col1, row2, col2,getValue = False):
+        range = self._sheet.Range(self._sheet.Cells(row1, col1), self._sheet.Cells(row2, col2))
+        ret = []
+        if getValue:
+            for r in range:
+                ret.append(r.Value)
+            return ret
+        return range
 
     def addPicture(self, sheet, pictureName, Left, Top, Width, Height):
         "Insert a picture in sheet"
@@ -364,8 +376,7 @@ class ThrSheet():
         shts = self._workbooksobj.Worksheets
         shts(1).Copy(None, shts(1))
 
-        # 得到最后一个组合的起始行数
-
+    # 得到最后一个组合的起始行数
     def getLastGroupedRowLineNumber(self):
         totalnumber = self.getUsedMaxRowIndex()
         for r in range(totalnumber, 1, -1):  # 倒着查找outline = 1的，这样不用编历整个excel,提高效率
@@ -380,11 +391,16 @@ class ThrSheet():
         return self.getUsedRangeInWorkSheet().Rows.Count
 
     # 取得某列的所有列单元
-    def getColumnCellsByColumnIndex(self, columnIndex):
+    def getColumnCellsByColumnIndex(self, columnIndex,start = 0,end = 0,getValue = False):
         endrow = self.getUsedMaxRowIndex()
+        st = 1
+        if end != 0:
+            endrow = end
+        if start != 0:
+            st = start
         cells = []
-        for i in range(1, endrow + 1, 1):
-            cells.append(self.getOneCellByRowColumnIndex(i, columnIndex))
+        for i in range(st, endrow + 1, 1):
+            cells.append(self.getOneCellByRowColumnIndex(i, columnIndex,getValue))
         return cells
 
     # 取得某列的所有列单元的值
@@ -405,6 +421,26 @@ class ThrSheet():
     # @index_column 列号
     def getOneCellByGivenRowColumnIndex(self, index_row, index_column):
         return self.getRowCellsByRowIndex(index_row)(index_column)
+
+    def getColumnCellsByTableName(self, colnamereg, headtitleindex = 1, getValue = False):
+         headcolumnCells = self.getUsedRowCellsByRowIndex(1)
+         columnIndex = 0 # 查找到Column的列数
+         cls = {} #返回结果，字典，存表头名称和Cells
+         for c in headcolumnCells:
+             if re.search(colnamereg,c.Value):
+                 columnIndex = c.Column
+                 clname = c.Value
+                 columns = self.getColumnCellsByColumnIndex(columnIndex, start=headtitleindex + 1, getValue=getValue)
+                 cls[clname] = columns
+         if columnIndex <= 0 :
+             raise Exception('没有找到相关的表格Title')
+         return cls
+
+
+
+
+
+
 
 
 
