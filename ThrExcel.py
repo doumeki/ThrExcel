@@ -87,6 +87,19 @@ class ThrExcel:
         excel.Workbooks(1).Close(SaveChanges= 0)
         excel.Quit()  # 大小写都可以
 
+    #创建一个SheetName
+    #default: 是否保留Sheet1的sheet表格
+    def createSheet(self,sheetName,default = True):
+        for sht in self._xlBook.Sheets:
+            if sht.Name == sheetName and default:
+                return self.getSheet(sheetName)
+            elif sht.Name == 'Sheet1' and not default:
+                sht.Name = sheetName
+                return self.getSheet(sheetName)
+        sht = self._xlBook.Sheets.Add()
+        sht.Name = sheetName
+        return  self.getSheet(sheetName)
+
     # 根据sheetName查找sheet对象
     def getSheet(self, sheetName):
         '''
@@ -235,9 +248,11 @@ class ThrSheet():
 
     # 根据行数，列数取得一个Cell对象
     def getOneCellByRowColumnIndex(self, row, column,getValue = False):
+        cell = self._sheet.Cells(row, column)
+        # cell.TextToColumns(FieldInfo = 'xlTextFormat')
         if getValue:
-            return self._sheet.Cells(row,column).Value
-        return self._sheet.Cells(row, column)
+            return cell.Value
+        return cell
 
     # 获取行对象
     # @index_row: 行数　整数型
@@ -422,12 +437,16 @@ class ThrSheet():
     def getOneCellByGivenRowColumnIndex(self, index_row, index_column):
         return self.getRowCellsByRowIndex(index_row)(index_column)
 
-    def getColumnCellsByTableName(self, colnamereg, headtitleindex = 1, getValue = False):
+    #根据表格取得列
+    #colnamereg:列名称：支持正则表达式
+    #headtitleindex: 列名行的在的index
+    #getVale:是否取得值而不是Cell对象
+    def getTableColumnCells(self, colnamereg, headtitleindex = 1, getValue = False):
          headcolumnCells = self.getUsedRowCellsByRowIndex(1)
          columnIndex = 0 # 查找到Column的列数
          cls = {} #返回结果，字典，存表头名称和Cells
          for c in headcolumnCells:
-             if re.search(colnamereg,c.Value):
+             if re.search(colnamereg,c.Value) or colnamereg == c.Value:
                  columnIndex = c.Column
                  clname = c.Value
                  columns = self.getColumnCellsByColumnIndex(columnIndex, start=headtitleindex + 1, getValue=getValue)
@@ -435,6 +454,30 @@ class ThrSheet():
          if columnIndex <= 0 :
              raise Exception('没有找到相关的表格Title')
          return cls
+
+    #根据行号取得最后一列的列数
+    def getEndingRowsCount(self, rowindex):
+        arc = self.getUsedRowCellsByRowIndex(rowindex)
+        end = arc.Count
+        return end
+
+    def setRowData(self,rowindex,values):
+        i = 1
+        for v in values:
+            self.getOneCellByRowColumnIndex(rowindex,i).Value = v
+            i += 1
+
+    def setColumnData(self,columnindex,values):
+        i = 1
+        for v in values:
+            self.getOneCellByRowColumnIndex(i,columnindex).Value = v
+            i += 1
+
+
+
+
+
+
 
 
 
